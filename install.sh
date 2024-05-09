@@ -53,11 +53,9 @@ DEST_DIR=$1; shift
 
 [[ -e "$DEST_DIR" ]] && die "Destination directory already exists: $DEST_DIR"
 
-mkdir -p "$DEST_DIR/.config"
-mkdir -p "$DEST_DIR/.local/share"
-mkdir -p "$DEST_DIR/.local/state"
-mkdir -p "$DEST_DIR/.cache"
-mkdir -p "$DEST_DIR/bin"
+mkdir -p "$DEST_DIR"
+
+DEST_DIR="$( cd "$DEST_DIR" && pwd )"
 
 case $(uname -s) in
     Darwin)
@@ -71,10 +69,19 @@ case $(uname -s) in
         ;;
 esac
 
-curl -fsSL https://github.com/neovim/neovim/releases/download/stable/$NVIM_PKG.tar.gz | tar xzfC - "$DEST_DIR/.local"
+mkdir -p "$DEST_DIR/.config"
+mkdir -p "$DEST_DIR/.local/share"
+mkdir -p "$DEST_DIR/.local/state"
+mkdir -p "$DEST_DIR/.cache"
+mkdir -p "$DEST_DIR/bin"
+mkdir -p "$DEST_DIR/.config/nvim"
+
+curl -fsSL https://github.com/neovim/neovim/releases/download/stable/$NVIM_PKG.tar.gz | tar xzC "$DEST_DIR/.local"
+
+curl -fsSL https://github.com/LazyVim/starter/archive/refs/heads/main.tar.gz | tar xzC "$DEST_DIR/.config/nvim" --strip-components=1
  
-cat > "$DEST_DIR/bin/nvim" <<EOF
-#!/usr/bin/env bash
+cat > "$DEST_DIR/bin/lvim" <<EOF
+#!/bin/bash
 
 export XDG_CONFIG_HOME="$DEST_DIR/.config"
 export XDG_DATA_HOME="$DEST_DIR/.local/share"
@@ -84,6 +91,8 @@ export XDG_CACHE_HOME="$DEST_DIR/.cache"
 exec "$DEST_DIR/.local/$NVIM_PKG/bin/nvim" "\$@"
 EOF
 
-chmod +x "$DEST_DIR/bin/nvim"
+chmod +x "$DEST_DIR/bin/lvim"
+
+echo "$DEST_DIR/bin/lvim"
 
 # vim:ft=bash:sw=4:ts=4:expandtab
